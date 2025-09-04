@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card raise">
+    <h2>Create account</h2>
+    {% if msg %}<div class="ok" style="margin:10px 0">{{ msg }}</div>{% endif %}
+    <form method="post" action="/register" class="auth-form fancy">
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password (min 6 chars)" minlength="6" required>
+      <button class="btn glow big" type="submit">Register</button>
+    </form>
+    <div class="muted">Already have an account? <a class="link" href="/login">Login</a></div>
+  </div>
+</div>
+{% endblock %}

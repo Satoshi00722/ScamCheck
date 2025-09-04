@@ -1,0 +1,22 @@
+
+{% extends "base.html" %}{% block content %}
+<h2>Wallet Check</h2>
+<form method="post" action="/check_wallet" class="check-form">
+  <input type="text" name="address" placeholder="Enter any popular chain address (BTC, EVM, TRON, SOL, XRP, etc.)" required>
+  <button class="btn pulse" type="submit">Check</button>
+</form>
+{% if result and result.ok %}
+<div class="result-card {{ result.color }} fade-in">
+  <div class="result-head">
+    <span class="badge {{ result.color }}">{{ result.label }}</span>
+    <div class="score-wrap"><div class="score-bar"><div class="score-fill {{ result.color }}" style="width: {{ result.score }}%"></div></div><div class="score-text">{{ result.score }}%</div></div>
+  </div>
+  <div class="result-summary">{{ result.summary }}</div>
+  <div class="result-columns">
+    <div class="col"><h4>Signals</h4><ul>{% for s in result.signals %}<li>{{ s }}</li>{% endfor %}</ul></div>
+    <div class="col"><h4>Recommendations</h4><ul>{% for t in result.tips %}<li>{{ t }}</li>{% endfor %}</ul></div>
+  </div>
+  <div class="addr">Address: <code>{{ result.address }}</code>{% if result.network %} • Network: <b>{{ result.network }}</b>{% endif %}</div>
+</div>
+{% elif result and not result.ok %}<div class="result-card red"><div class="result-summary">Error: {{ result.error }}</div></div>{% endif %}
+{% endblock %}

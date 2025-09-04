@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% block content %}
+<h2>Subscription</h2>
+
+{% if sub %}
+  <p class="ok">✅ Premium is active for {{ user }}. All features unlocked.</p>
+{% else %}
+  <div class="pricing">
+    <div class="card raise">
+      <h3>Premium</h3>
+      <div class="price"><span>$</span>20<span>/month</span></div>
+      <ul>
+        <li>All wallet/token/contract checks</li>
+        <li>Priority API speed</li>
+        <li>Upcoming Telegram/Discord audit</li>
+      </ul>
+
+      {% if pay_error %}
+        <div class="err" style="margin:8px 0">Payment error: {{ pay_error }}</div>
+      {% endif %}
+
+      <form method="post" action="/subscription/pay">
+        <button class="btn glow big" type="submit">Pay $20/month</button>
+      </form>
+
+      {# Dev-кнопка видна только админу #}
+      {% if is_admin %}
+      <form method="post" action="/subscription/demo-activate" style="margin-top:10px">
+        <button class="btn subtle" type="submit">Activate Demo (dev)</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ScamCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" type="image/png" href="{{ url_for('static', path='img/favicon.png') }}">
+</head>
+<body>
+<header class="blur">
+  <div class="brand"><div class="glow-dot"></div><h1>ScamCheck</h1></div>
+  <nav>
+    <a class="navbtn" href="/">Wallet</a><a class="navbtn" href="/token">Token</a><a class="navbtn" href="/contract">Contract</a>
+    <a class="navbtn" href="/group">Group</a><a class="navbtn" href="/knowledge">Knowledge</a><a class="navbtn" href="/subscription">Subscription</a>
+    {% if user %}<span class="user">👤 {{ user }}</span><a class="navbtn" href="/logout">Logout</a>
+    {% else %}<a class="navbtn" href="/login">Login</a><a class="navbtn" href="/register">Register</a>{% endif %}
+  </nav>
+</header>
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>
