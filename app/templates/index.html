@@ -5,6 +5,16 @@
   <input type="text" name="address" placeholder="Enter any popular chain address (BTC, EVM, TRON, SOL, XRP, etc.)" required>
   <button class="btn pulse" type="submit">Check</button>
 </form>
+ <!-- ACTIONS under search -->
+<div class="inline-actions">
+  <a class="ia-btn" href="/">Wallet</a>
+  <a class="ia-btn" href="/token">Token</a>
+  <a class="ia-btn" href="/contract">Contract</a>
+  <a class="ia-btn" href="/group">Group</a>
+  <a class="ia-btn" href="/knowledge">Knowledge</a>
+  <a class="ia-btn" href="/subscription">Subscription</a>
+  <a class="ia-btn danger" href="/logout">Logout</a>
+</div>
 {% if result and result.ok %}
 <div class="result-card {{ result.color }} fade-in">
   <div class="result-head">

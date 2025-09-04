@@ -46,3 +46,34 @@ h2{text-align:center;margin:6px 0 18px}
 .auth-form.fancy input{padding:12px;border-radius:12px;border:1px solid #24324a;background:#0f172a;color:#e5e7eb}
 .muted{margin-top:10px;color:#9ca3af}
 .link{color:#93c5fd;text-decoration:underline}
+/* Кнопки под поиском */
+.inline-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:14px 0 18px;
+}
+
+.ia-btn{
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:600;
+  font-size:14px;
+  text-decoration:none;
+  color:#E8ECF3;
+  background: linear-gradient(135deg,#5b86ff 0%, #8c59ff 100%);
+  box-shadow: 0 6px 18px rgba(98,90,255,.25);
+  transition: transform .08s ease, opacity .2s ease;
+}
+
+.ia-btn:hover{ transform: translateY(-1px); opacity:.95; }
+.ia-btn:active{ transform: translateY(0); opacity:.9; }
+
+.ia-btn.danger{
+  background: linear-gradient(135deg,#ff6b6b 0%, #ff3f67 100%);
+}
+
+/* Мобилка: кнопки на всю ширину в 2 колонки */
+@media (max-width:720px){
+  .ia-btn{ flex:1 1 calc(50% - 10px); text-align:center; }
+}
