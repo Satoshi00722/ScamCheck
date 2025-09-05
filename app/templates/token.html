@@ -1,8 +1,14 @@
+{% extends "base.html" %}
 
-{% extends "base.html" %}{% block content %}
-<h2>Token Check</h2>
+{% block title %}Token Check — ScamCheck{% endblock %}
+{% block h1 %}Token Check{% endblock %}
+
+{% block content %}
 {% if not sub %}
-  <div class="locked"><p>Premium required.</p><a class="btn" href="/subscription">Get Premium</a></div>
+  <div class="locked">
+    <p>Premium required.</p>
+    <a class="btn" href="/subscription">Get Premium</a>
+  </div>
 {% else %}
   <form method="get" action="/token" class="checker">
     <input type="text" name="token" placeholder="Token contract address (0x…)" value="{{ token or '' }}" required>
@@ -15,7 +21,7 @@
     </select>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
-    {% include "_navrow.html" %}
+
   {% if token %}
     <div class="result-card fade-in">
       <h3>DEX Liquidity</h3>
@@ -23,11 +29,16 @@
         <p><b>DEX:</b> {{ info.pair.dex }} | <b>Pair:</b> {{ info.pair.base }}/{{ info.pair.quote }}</p>
         <p><b>Liquidity USD:</b> ${{ '%.2f'|format(info.pair.liquidityUsd or 0) }} | <b>FDV:</b> ${{ info.pair.fdv or '—' }}</p>
         <p><a class="link" href="{{ info.pair.url }}" target="_blank">Open DEX pair</a></p>
-      {% else %}<p>No DEX pair found.</p>{% endif %}
+      {% else %}
+        <p>No DEX pair found.</p>
+      {% endif %}
+
       <h3>Honeypot</h3>
       {% if hp and hp.ok %}
         <p>Buy tax: <b>{{ hp.buyTax }}</b> • Sell tax: <b>{{ hp.sellTax }}</b> • Honeypot: <b>{{ 'YES' if hp.isHoneypot else 'NO' }}</b></p>
-      {% else %}<p>Honeypot check failed.</p>{% endif %}
+      {% else %}
+        <p>Honeypot check failed.</p>
+      {% endif %}
     </div>
   {% endif %}
 {% endif %}

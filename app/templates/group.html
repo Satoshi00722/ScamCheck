@@ -1,5 +1,9 @@
-{% extends "base.html" %}{% block content %}
-<h2>Group Check</h2>
+{% extends "base.html" %}
+
+{% block title %}Group Check — ScamCheck{% endblock %}
+{% block h1 %}Group Check{% endblock %}
+
+{% block content %}
 {% if not sub %}
   <div class="locked">
     <p>Premium required.</p>
@@ -10,7 +14,6 @@
     <input type="url" name="link" placeholder="Paste Telegram or Discord invite URL" value="{{ link or '' }}" required>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
-    {% include "_navrow.html" %}
 
   {% if result %}
     {% if result.ok %}
@@ -18,20 +21,41 @@
         <div class="result-head">
           <span class="badge {{ result.color }}">{{ result.label }}</span>
           <div class="score-wrap">
-            <div class="score-bar"><div class="score-fill {{ result.color }}" style="width: {{ result.risk }}%"></div></div>
+            <div class="score-bar">
+              <div class="score-fill {{ result.color }}" style="width: {{ result.risk }}%"></div>
+            </div>
             <div class="score-text">{{ result.risk }}%</div>
           </div>
         </div>
         <div class="result-summary">{{ result.summary }}</div>
         <div class="result-columns">
-          <div class="col"><h4>Signals</h4><ul>{% for s in result.signals %}<li>{{ s }}</li>{% endfor %}</ul></div>
-          <div class="col"><h4>Recommendations</h4><ul>{% for t in result.tips %}<li>{{ t }}</li>{% endfor %}</ul></div>
+          <div class="col">
+            <h4>Signals</h4>
+            <ul>
+              {% for s in result.signals %}
+                <li>{{ s }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="col">
+            <h4>Recommendations</h4>
+            <ul>
+              {% for t in result.tips %}
+                <li>{{ t }}</li>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
-        <div class="addr">Link: <a class="link" href="{{ result.url }}" target="_blank" rel="noopener">{{ result.url }}</a></div>
+        <div class="addr">
+          Link: <a class="link" href="{{ result.url }}" target="_blank" rel="noopener">{{ result.url }}</a>
+        </div>
       </div>
     {% else %}
-      <div class="result-card red"><div class="result-summary">Error: {{ result.error }}</div></div>
+      <div class="result-card red">
+        <div class="result-summary">Error: {{ result.error }}</div>
+      </div>
     {% endif %}
   {% endif %}
 {% endif %}
 {% endblock %}
+

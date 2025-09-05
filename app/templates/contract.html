@@ -1,8 +1,14 @@
+{% extends "base.html" %}
 
-{% extends "base.html" %}{% block content %}
-<h2>Contract Check</h2>
+{% block title %}Contract Check — ScamCheck{% endblock %}
+{% block h1 %}Contract Check{% endblock %}
+
+{% block content %}
 {% if not sub %}
-  <div class="locked"><p>Premium required.</p><a class="btn" href="/subscription">Get Premium</a></div>
+  <div class="locked">
+    <p>Premium required.</p>
+    <a class="btn" href="/subscription">Get Premium</a>
+  </div>
 {% else %}
   <form method="get" action="/contract" class="checker">
     <input type="text" name="address" placeholder="Contract address (0x…)" value="{{ address or '' }}" required>
@@ -15,14 +21,25 @@
     </select>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
-    {% include "_navrow.html" %}
+
   {% if result %}
     <div class="result-card fade-in">
-      <p><b>Verified:</b> {{ 'YES' if result.verified else 'NO' }} • <b>Compiler:</b> {{ result.compiler or '—' }} • <b>License:</b> {{ result.license or '—' }}</p>
+      <p>
+        <b>Verified:</b> {{ 'YES' if result.verified else 'NO' }}
+        • <b>Compiler:</b> {{ result.compiler or '—' }}
+        • <b>License:</b> {{ result.license or '—' }}
+      </p>
+
       {% if result.flags and result.flags|length > 0 %}
         <h3>Potential Risk Flags</h3>
-        <ul>{% for f in result.flags %}<li>{{ f }}</li>{% endfor %}</ul>
-      {% else %}<p>No obvious dangerous patterns found in source.</p>{% endif %}
+        <ul>
+          {% for f in result.flags %}
+            <li>{{ f }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No obvious dangerous patterns found in source.</p>
+      {% endif %}
     </div>
   {% endif %}
 {% endif %}

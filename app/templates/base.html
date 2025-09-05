@@ -1,31 +1,45 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>ScamCheck</title>
+  <title>{% block title %}ScamCheck{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="icon" type="image/png" href="{{ url_for('static', path='img/favicon.png') }}">
 </head>
 <body>
-<header class="blur">
-  <div class="brand">
-    <div class="glow-dot"></div>
-    <h1>ScamCheck</h1>
-  </div>
+  <!-- Верхняя панель: видно e-mail пользователя -->
+  <header class="topbar blur">
+    <div class="brand">
+      <div class="glow-dot"></div>
+      <a href="/" class="logo">ScamCheck</a>
+    </div>
+    <div class="auth">
+      {% if user %}
+        <span class="user">👤 {{ user }}</span>
+        <a class="link" href="/logout">Logout</a>
+      {% else %}
+        <a class="link" href="/login">Login</a>
+        <a class="link" href="/register">Register</a>
+      {% endif %}
+    </div>
+  </header>
 
-  <!-- ВЕРХНЕЕ МЕНЮ УБРАЛИ. Оставляем только инфо о пользователе -->
-  <div class="top-user">
-    {% if user %}
-      <span class="user">👤 {{ user }}</span>
-      <a class="navbtn" href="/logout">Logout</a>
-    {% else %}
-      <a class="navbtn" href="/login">Login</a>
-      <a class="navbtn" href="/register">Register</a>
-    {% endif %}
-  </div>
-</header>
-<main>{% block content %}{% endblock %}</main>
+  <main class="container">
+    <!-- H1 меняется в дочерних шаблонах -->
+    <h1 class="page-title">{% block h1 %}Wallet Check{% endblock %}</h1>
+
+    <!-- Только крупные кнопки -->
+    <nav class="btn-grid">
+      <a class="big-btn" href="/token">Token</a>
+      <a class="big-btn" href="/contract">Contract</a>
+      <a class="big-btn" href="/group">Group</a>
+      <a class="big-btn" href="/knowledge">Knowledge</a>
+      <a class="big-btn" href="/subscription">Subscription</a>
+      {% if user %}<a class="big-btn btn-logout" href="/logout">Logout</a>{% endif %}
+    </nav>
+
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>

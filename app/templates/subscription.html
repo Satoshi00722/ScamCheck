@@ -1,7 +1,9 @@
-{% extends "base.html" %}{% block content %}
-<h2>Subscription</h2>
-    {% include "_navrow.html" %}
+{% extends "base.html" %}
 
+{% block title %}Subscription — ScamCheck{% endblock %}
+{% block h1 %}Subscription{% endblock %}
+
+{% block content %}
 {% if sub %}
   <p class="ok">✅ Premium is active for {{ user }}. All features unlocked.</p>
 {% else %}
