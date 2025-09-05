@@ -5,7 +5,34 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe
 /* ---------- top bar ---------- */
 header{display:flex;justify-content:space-between;align-items:center;background:#0c1222;padding:14px 18px;position:sticky;top:0;backdrop-filter:saturate(140%) blur(6px);z-index:10}
 .brand{display:flex;align-items:center;gap:10px}
-.brand h1{margin:0;color:#4ade80;font-weight:800;letter-spacing:.3px}
+
+/* зеленый логотип с подсветкой */
+.logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: #4ade80; /* зелёный */
+  text-decoration: none;
+  letter-spacing: .4px;
+  text-shadow:
+    0 0 6px rgba(74, 222, 128, 0.75),
+    0 0 14px rgba(34, 197, 94, 0.65),
+    0 0 22px rgba(22, 163, 74, 0.55);
+  animation: glowPulse 3s infinite;
+  transition: text-shadow .2s ease, transform .15s ease;
+}
+.logo:hover {
+  transform: scale(1.05);
+  text-shadow:
+    0 0 8px rgba(74, 222, 128, 0.85),
+    0 0 18px rgba(34, 197, 94, 0.75),
+    0 0 28px rgba(22, 163, 74, 0.65);
+}
+@keyframes glowPulse {
+  0%   { text-shadow: 0 0 6px rgba(74,222,128,.7), 0 0 14px rgba(34,197,94,.6), 0 0 22px rgba(22,163,74,.5); }
+  50%  { text-shadow: 0 0 10px rgba(74,222,128,.9), 0 0 22px rgba(34,197,94,.8), 0 0 34px rgba(22,163,74,.7); }
+  100% { text-shadow: 0 0 6px rgba(74,222,128,.7), 0 0 14px rgba(34,197,94,.6), 0 0 22px rgba(22,163,74,.5); }
+}
+
 .glow-dot{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at center, #8b5cf6, #0ea5e9);box-shadow:0 0 10px #6ee7ff, 0 0 18px #a78bfa;animation:pulse 2.2s infinite}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
 nav a,nav .user{margin:0 8px;color:#93c5fd;text-decoration:none}
@@ -60,7 +87,7 @@ h2{text-align:center;margin:6px 0 18px}
 .checker input,.checker select{padding:10px 12px;border-radius:10px;border:1px solid #24324a;background:#0f172a;color:#e5e7eb}
 .knowledge li{margin:6px 0}
 .fade-in{animation:fade .35s ease both}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}
 
 /* ---------- auth ---------- */
 .auth-wrap{display:flex;justify-content:center}
@@ -71,11 +98,11 @@ h2{text-align:center;margin:6px 0 18px}
 .link{color:#93c5fd;text-decoration:underline}
 
 /* ---------- старые маленькие кнопки под поиском (прячем) ---------- */
-.inline-actions{display:none}                 /* <= скрыли совсем */
+.inline-actions{display:none}
 .ia-btn{display:none}
 .ia-btn.danger{display:none}
 
-/* ---------- большие кнопки навигации (оставляем только их) ---------- */
+/* ---------- большие кнопки навигации ---------- */
 .container{max-width:1100px;margin:0 auto;padding:24px}
 .page-title{font-size:28px;font-weight:700;color:#e5e7eb;margin:12px 0 20px}
 
@@ -109,7 +136,7 @@ h2{text-align:center;margin:6px 0 18px}
   box-shadow:0 6px 18px rgba(255,77,104,.25);
 }
 
-/* активная страница (если захочешь добавлять класс .active) */
+/* активная страница */
 .big-btn.active{
   outline:2px solid rgba(255,255,255,.22);
   box-shadow:0 0 0 4px rgba(99,102,241,.25), 0 6px 18px rgba(79,122,251,.25);
@@ -121,6 +148,74 @@ h2{text-align:center;margin:6px 0 18px}
   .check-form,.checker{flex-direction:column}
   .score-bar{width:100%}
   .result-columns{grid-template-columns:1fr}
-  .big-btn{flex:1 1 100%;min-width:0}     /* кнопки на всю ширину */
+  .big-btn{flex:1 1 100%;min-width:0}
+}
+/* ==== Neural background (PC + Mobile) ==== */
+/* Многослойный фон: цветные "орбы" + тонкая сетка + мягкий сканирующий блик */
+body::before,
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
 }
 
+/* Слой 1 — цветовые орбы и сетка */
+body::before{
+  /* орбы */
+  background:
+    radial-gradient(900px 520px at 16% -10%, rgba(99,102,241,.18), transparent 60%),
+    radial-gradient(700px 460px at 82% 0%,   rgba(56,189,248,.16), transparent 60%),
+    radial-gradient(880px 520px at 25% 100%, rgba(34,197,94,.14),  transparent 65%),
+    radial-gradient(1000px 640px at 110% 90%,rgba(168,85,247,.12), transparent 65%),
+    /* тонкая сетка */
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size:
+    auto, auto, auto, auto,
+    40px 40px, 40px 40px;                     /* шаг сетки */
+  background-position:
+    center, center, center, center,
+    center, center;
+  mix-blend-mode: screen;
+}
+
+/* Слой 2 — "сканирующая" полоса */
+body::after{
+  background:
+    linear-gradient(120deg, transparent 30%,
+      rgba(99,102,241,.10) 45%,
+      rgba(56,189,248,.10) 55%,
+      transparent 70%);
+  filter: blur(1px);
+  animation: sweep 16s linear infinite;
+  mix-blend-mode: screen;
+  opacity:.6;
+}
+
+@keyframes sweep{
+  0%   { transform: translateX(-60%) translateY(-10%); }
+  50%  { transform: translateX(10%)  translateY(10%);  }
+  100% { transform: translateX(60%) translateY(-10%); }
+}
+
+/* Мобилка — делаем орбы компактнее и сетку крупнее для читаемости */
+@media (max-width:720px){
+  body::before{
+    background:
+      radial-gradient(520px 360px at 10% -10%, rgba(99,102,241,.20), transparent 60%),
+      radial-gradient(520px 360px at 95% 5%,  rgba(56,189,248,.18), transparent 60%),
+      radial-gradient(560px 380px at 20% 100%,rgba(34,197,94,.16),  transparent 65%),
+      radial-gradient(640px 420px at 115% 90%,rgba(168,85,247,.12), transparent 65%),
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: auto, auto, auto, auto, 48px 48px, 48px 48px;
+  }
+  body::after{ opacity:.55; animation-duration: 18s; }
+}
+
+/* Уважение к настройкам пользователя — отключаем анимации */
+@media (prefers-reduced-motion: reduce){
+  body::after{ animation: none; opacity:.35; }
+}
