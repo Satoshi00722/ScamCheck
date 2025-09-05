@@ -1,0 +1,39 @@
+<div class="actions">
+  <a href="/" class="action-btn">Wallet</a>
+  <a href="/token" class="action-btn">Token</a>
+  <a href="/contract" class="action-btn">Contract</a>
+  <a href="/group" class="action-btn">Group</a>
+  <a href="/knowledge" class="action-btn">Knowledge</a>
+  <a href="/subscription" class="action-btn">Subscription</a>
+  <a href="/logout" class="action-btn danger">Logout</a>
+</div>
+
+<style>
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 20px 0;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #9333ea);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+.action-btn.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+</style>
