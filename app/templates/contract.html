@@ -15,6 +15,7 @@
     </select>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
+    {% include "_navrow.html" %}
   {% if result %}
     <div class="result-card fade-in">
       <p><b>Verified:</b> {{ 'YES' if result.verified else 'NO' }} • <b>Compiler:</b> {{ result.compiler or '—' }} • <b>License:</b> {{ result.license or '—' }}</p>

@@ -1,0 +1,14 @@
+<div class="actions-row">
+  <a class="chip" href="/">Wallet</a>
+  <a class="chip" href="/token">Token</a>
+  <a class="chip" href="/contract">Contract</a>
+  <a class="chip" href="/group">Group</a>
+  <a class="chip" href="/knowledge">Knowledge</a>
+  <a class="chip" href="/subscription">Subscription</a>
+  {% if user %}
+    <a class="chip danger" href="/logout">Logout</a>
+  {% else %}
+    <a class="chip" href="/login">Login</a>
+    <a class="chip" href="/register">Register</a>
+  {% endif %}
+</div>

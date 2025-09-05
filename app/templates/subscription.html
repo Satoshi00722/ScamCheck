@@ -1,5 +1,6 @@
 {% extends "base.html" %}{% block content %}
 <h2>Subscription</h2>
+    {% include "_navrow.html" %}
 
 {% if sub %}
   <p class="ok">✅ Premium is active for {{ user }}. All features unlocked.</p>

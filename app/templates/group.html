@@ -10,6 +10,7 @@
     <input type="url" name="link" placeholder="Paste Telegram or Discord invite URL" value="{{ link or '' }}" required>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
+    {% include "_navrow.html" %}
 
   {% if result %}
     {% if result.ok %}
