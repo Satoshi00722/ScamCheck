@@ -6,11 +6,11 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe
 header{display:flex;justify-content:space-between;align-items:center;background:#0c1222;padding:14px 18px;position:sticky;top:0;backdrop-filter:saturate(140%) blur(6px);z-index:10}
 .brand{display:flex;align-items:center;gap:10px}
 
-/* зеленый логотип с подсветкой */
+/* зелёный логотип с подсветкой */
 .logo {
   font-size: 20px;
   font-weight: 800;
-  color: #4ade80; /* зелёный */
+  color: #4ade80;
   text-decoration: none;
   letter-spacing: .4px;
   text-shadow:
@@ -35,9 +35,11 @@ header{display:flex;justify-content:space-between;align-items:center;background:
 
 .glow-dot{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at center, #8b5cf6, #0ea5e9);box-shadow:0 0 10px #6ee7ff, 0 0 18px #a78bfa;animation:pulse 2.2s infinite}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
-nav a,nav .user{margin:0 8px;color:#93c5fd;text-decoration:none}
-nav a:hover{text-decoration:underline}
-nav .user{opacity:.8}
+
+/* ссылки только для правого угла (Login/Register/Logout возле e-mail) */
+.auth .link, .auth .user { margin:0 8px; color:#93c5fd; text-decoration:none; }
+.auth .link:hover { text-decoration:underline; }
+.auth .user { opacity:.8 }
 
 /* ---------- layout ---------- */
 main{max-width:980px;margin:0 auto;padding:24px}
@@ -150,8 +152,8 @@ h2{text-align:center;margin:6px 0 18px}
   .result-columns{grid-template-columns:1fr}
   .big-btn{flex:1 1 100%;min-width:0}
 }
+
 /* ==== Neural background (PC + Mobile) ==== */
-/* Многослойный фон: цветные "орбы" + тонкая сетка + мягкий сканирующий блик */
 body::before,
 body::after{
   content:"";
@@ -160,31 +162,20 @@ body::after{
   pointer-events:none;
   z-index:-1;
 }
-
-/* Слой 1 — цветовые орбы и сетка */
 body::before{
-  /* орбы */
   background:
     radial-gradient(900px 520px at 16% -10%, rgba(99,102,241,.18), transparent 60%),
     radial-gradient(700px 460px at 82% 0%,   rgba(56,189,248,.16), transparent 60%),
     radial-gradient(880px 520px at 25% 100%, rgba(34,197,94,.14),  transparent 65%),
     radial-gradient(1000px 640px at 110% 90%,rgba(168,85,247,.12), transparent 65%),
-    /* тонкая сетка */
     linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-  background-size:
-    auto, auto, auto, auto,
-    40px 40px, 40px 40px;                     /* шаг сетки */
-  background-position:
-    center, center, center, center,
-    center, center;
+  background-size:auto, auto, auto, auto, 40px 40px, 40px 40px;
+  background-position:center, center, center, center, center, center;
   mix-blend-mode: screen;
 }
-
-/* Слой 2 — "сканирующая" полоса */
 body::after{
-  background:
-    linear-gradient(120deg, transparent 30%,
+  background:linear-gradient(120deg, transparent 30%,
       rgba(99,102,241,.10) 45%,
       rgba(56,189,248,.10) 55%,
       transparent 70%);
@@ -193,14 +184,11 @@ body::after{
   mix-blend-mode: screen;
   opacity:.6;
 }
-
 @keyframes sweep{
   0%   { transform: translateX(-60%) translateY(-10%); }
   50%  { transform: translateX(10%)  translateY(10%);  }
   100% { transform: translateX(60%) translateY(-10%); }
 }
-
-/* Мобилка — делаем орбы компактнее и сетку крупнее для читаемости */
 @media (max-width:720px){
   body::before{
     background:
@@ -210,12 +198,10 @@ body::after{
       radial-gradient(640px 420px at 115% 90%,rgba(168,85,247,.12), transparent 65%),
       linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-    background-size: auto, auto, auto, auto, 48px 48px, 48px 48px;
+    background-size:auto, auto, auto, auto, 48px 48px, 48px 48px;
   }
   body::after{ opacity:.55; animation-duration: 18s; }
 }
-
-/* Уважение к настройкам пользователя — отключаем анимации */
 @media (prefers-reduced-motion: reduce){
   body::after{ animation: none; opacity:.35; }
 }

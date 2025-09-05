@@ -1,7 +1,11 @@
-{% extends "base.html" %}{% block content %}
+{% extends "base.html" %}
+
+{% block title %}Create account — ScamCheck{% endblock %}
+{% block h1 %}Create account{% endblock %}
+
+{% block content %}
 <div class="auth-wrap">
   <div class="auth-card raise">
-    <h2>Create account</h2>
     {% if msg %}<div class="ok" style="margin:10px 0">{{ msg }}</div>{% endif %}
     <form method="post" action="/register" class="auth-form fancy">
       <input type="email" name="email" placeholder="Email" required>
