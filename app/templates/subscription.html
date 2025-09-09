@@ -14,13 +14,31 @@
 .price .now{font-size:44px;font-weight:800;color:#9fffc4}
 .price .per{opacity:.8}
 .price .old{font-size:16px;opacity:.45;text-decoration:line-through}
+
+/* list + items */
 .list{margin:14px 0 8px;padding-left:0;list-style:none;display:grid;gap:10px}
+/* выравнивание пункта: иконка-точка + текст */
+.list .li{display:flex;align-items:flex-start;gap:10px}
+
+/* ИКОНКА-ТОЧКА (зелёная) — добавлено */
+.i{display:inline-block;position:relative;width:14px;height:14px;flex:0 0 14px}
+/* рисуем зелёную точку даже если внутри нет .dot */
+.i::before{
+  content:"";
+  position:absolute;inset:0;margin:auto;
+  width:9px;height:9px;border-radius:50%;
+  background:#39d98a;
+  box-shadow:0 0 16px rgba(57,217,138,.45);
+}
+
+/* старые правила оставляю нетронутыми */
 .i{display:inline-flex;align-items:center;gap:9px}
 .i .dot{width:9px;height:9px;border-radius:50%;
         background:#39d98a; /* green dot */
         box-shadow:0 0 16px rgba(57,217,138,.45)}
 /* even muted items use green dots */
 .i.muted .dot{background:#39d98a; box-shadow:0 0 16px rgba(57,217,138,.45)}
+
 .subtle{opacity:.8}
 .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .btn{appearance:none;border:none;border-radius:12px;padding:12px 18px;font-weight:700;
@@ -69,12 +87,15 @@
       <span class="hint">Limited time</span>
     </div>
 
+    <!-- PREMIUM -->
     <ul class="list">
-      <li class="i"><span class="dot"></span> <b>All checks:</b>&nbsp;Wallet, Token, Contract, Group</li>
-      <li class="i"><span class="dot"></span> <b>Unlimited</b> checks</li>
-      <li class="i muted"><span class="dot"></span> Priority API speed</li>
-      <li class="i muted"><span class="dot"></span> Full risk reports with clear red-flags</li>
-      <li class="i muted"><span class="dot"></span> Early access to new chains</li>
+      <li class="li"><span class="i ok"></span><div><b>All checks</b>: Wallet, Token, Contract, Group</div></li>
+      <li class="li"><span class="i ok"></span><div><b>Unlimited</b> checks</div></li>
+      <li class="li"><span class="i ok"></span><div><b>Priority</b> API speed</div></li>
+      <li class="li"><span class="i ok"></span><div><b>Full risk reports</b> with clear red-flags</div></li>
+      <li class="li"><span class="i ok"></span><div><b>Real-time scam alerts</b></div></li>
+      <li class="li"><span class="i ok"></span><div><b>Advanced risk scoring</b></div></li>
+      <li class="li"><span class="i ok"></span><div><b>Exclusive risk database</b></div></li>
     </ul>
 
     <div class="cta">
