@@ -12,13 +12,6 @@
 {% else %}
   <form method="get" action="/token" class="checker">
     <input type="text" name="token" placeholder="Token contract address (0x…)" value="{{ token or '' }}" required>
-    <select name="chain">
-      <option value="eth" {% if chain=='eth' %}selected{% endif %}>Ethereum</option>
-      <option value="bsc" {% if chain=='bsc' %}selected{% endif %}>BSC</option>
-      <option value="polygon" {% if chain=='polygon' %}selected{% endif %}>Polygon</option>
-      <option value="arbitrum" {% if chain=='arbitrum' %}selected{% endif %}>Arbitrum</option>
-      <option value="optimism" {% if chain=='optimism' %}selected{% endif %}>Optimism</option>
-    </select>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
 
@@ -35,7 +28,11 @@
 
       <h3>Honeypot</h3>
       {% if hp and hp.ok %}
-        <p>Buy tax: <b>{{ hp.buyTax }}</b> • Sell tax: <b>{{ hp.sellTax }}</b> • Honeypot: <b>{{ 'YES' if hp.isHoneypot else 'NO' }}</b></p>
+        <p>
+          Buy tax: <b>{{ hp.buyTax }}</b> •
+          Sell tax: <b>{{ hp.sellTax }}</b> •
+          Honeypot: <b>{{ 'YES' if hp.isHoneypot else 'NO' }}</b>
+        </p>
       {% else %}
         <p>Honeypot check failed.</p>
       {% endif %}

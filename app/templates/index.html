@@ -4,6 +4,19 @@
 {% block h1 %}Wallet Check{% endblock %}
 
 {% block content %}
+
+{# --- Бейдж подписки/лимита --- #}
+{% if badge %}
+  {% if badge.is_premium %}
+    <div class="badge success">Premium • {{ badge.days_left }} days left</div>
+  {% else %}
+    <div class="badge warn">
+      Free • Wallet checks: {{ badge.used_today }}/{{ badge.max_free }} used
+      ({{ badge.left_today }} left today)
+    </div>
+  {% endif %}
+{% endif %}
+
 <form method="post" action="/check_wallet" class="check-form">
   <input
     type="text"
@@ -13,6 +26,10 @@
   >
   <button class="btn pulse" type="submit">Check</button>
 </form>
+
+{% if msg %}
+  <div class="notice">{{ msg }}</div>
+{% endif %}
 
 {% if result and result.ok %}
   <div class="result-card {{ result.color }} fade-in">

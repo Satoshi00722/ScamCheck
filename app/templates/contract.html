@@ -12,13 +12,6 @@
 {% else %}
   <form method="get" action="/contract" class="checker">
     <input type="text" name="address" placeholder="Contract address (0x…)" value="{{ address or '' }}" required>
-    <select name="chain_code">
-      <option value="ETH" {% if chain_code=='ETH' %}selected{% endif %}>Ethereum</option>
-      <option value="BSC" {% if chain_code=='BSC' %}selected{% endif %}>BSC</option>
-      <option value="POLYGON" {% if chain_code=='POLYGON' %}selected{% endif %}>Polygon</option>
-      <option value="ARB" {% if chain_code=='ARB' %}selected{% endif %}>Arbitrum</option>
-      <option value="OPT" {% if chain_code=='OPT' %}selected{% endif %}>Optimism</option>
-    </select>
     <button class="btn glow" type="submit">Analyze</button>
   </form>
 

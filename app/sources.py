@@ -101,38 +101,107 @@ async def token_honeypot_check(token_address: str, chain: str = "eth") -> dict:
 
 
 async def etherscan_contract_source(address: str, chain_code: str = "ETH") -> dict:
-    # <-- ЭТА функция нужна main.py
-    base = SCAN_BASE.get(chain_code, SCAN_BASE["ETH"])
-    if not ETHERSCAN_API_KEY:
-        return {"ok": False, "error": "ETHERSCAN_API_KEY missing"}
-    async with httpx.AsyncClient(timeout=15) as client:
-        url = f"{base}?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}"
-        r = await client.get(url)
-        data = r.json()
-        res = (data.get("result") or [{}])[0]
-        src = res.get("SourceCode") or ""
-        verified = bool(src)
-        flags = []
-        lowersrc = src.lower()
-        danger_patterns = [
-            "blacklist",
-            "whitelist",
-            "pause",
-            "mint(",
-            "setfee",
-            "owner()",
-            "transferownership",
-        ]
-        for p in danger_patterns:
-            if p in lowersrc:
-                flags.append(p)
+    """
+    Стабильная проверка исходников контракта:
+    - нормализует сеть (Ethereum/BSC/Polygon/Arbitrum/Optimism)
+    - валидирует адрес (0x + 40 hex)
+    - корректно парсит ответы сканера (result=str/list/пусто)
+    - никогда не падает 500 — возвращает ok/verified/error/note
+    """
+    # нормализуем имя сети из UI
+    name_map = {
+        "ETHEREUM": "ETH", "ETH": "ETH",
+        "BSC": "BSC", "BINANCE": "BSC",
+        "POLYGON": "POLYGON", "MATIC": "POLYGON",
+        "ARBITRUM": "ARB", "ARB": "ARB",
+        "OPTIMISM": "OPT", "OPT": "OPT",
+    }
+    key = name_map.get((chain_code or "ETH").upper(), "ETH")
+    base = SCAN_BASE.get(key, SCAN_BASE["ETH"])
+
+    # валидация адреса (EVM)
+    if not (isinstance(address, str) and address.startswith("0x") and len(address) == 42):
         return {
             "ok": True,
-            "verified": verified,
-            "flags": flags,
-            "compiler": res.get("CompilerVersion"),
-            "license": res.get("LicenseType"),
+            "verified": False,
+            "flags": [],
+            "compiler": None,
+            "license": None,
+            "error": f"Invalid {key} contract address. Must be 0x + 40 hex chars."
         }
+
+    if not ETHERSCAN_API_KEY:
+        return {
+            "ok": True, "verified": False, "flags": [],
+            "compiler": None, "license": None, "error": "ETHERSCAN_API_KEY missing"
+        }
+
+    # запрос к сканеру
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            url = f"{base}?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}"
+            r = await client.get(url)
+    except Exception as e:
+        return {
+            "ok": True, "verified": False, "flags": [], "compiler": None, "license": None,
+            "error": f"Explorer request failed: {type(e).__name__}"
+        }
+
+    if r.status_code != 200:
+        return {
+            "ok": True, "verified": False, "flags": [], "compiler": None, "license": None,
+            "error": f"{key}scan HTTP {r.status_code}"
+        }
+
+    try:
+        data = r.json()
+    except Exception:
+        return {
+            "ok": True, "verified": False, "flags": [], "compiler": None, "license": None,
+            "error": "Bad JSON from explorer"
+        }
+
+    result = data.get("result")
+
+    # иногда result = строка с текстом ошибки
+    if isinstance(result, str):
+        msg = result or data.get("message") or "Explorer error"
+        if "not verified" in msg.lower():
+            return {
+                "ok": True, "verified": False, "flags": [], "compiler": None, "license": None, "note": msg
+            }
+        return {
+            "ok": True, "verified": False, "flags": [], "compiler": None, "license": None, "error": msg
+        }
+
+    # ожидаем список
+    if not isinstance(result, list) or not result:
+        msg = data.get("message") or "No result from explorer"
+        return {
+            "ok": True, "verified": False, "flags": [], "compiler": None, "license": None, "error": msg
+        }
+
+    res0 = result[0] or {}
+    src = res0.get("SourceCode") or ""
+    verified = bool(src)
+
+    flags = []
+    if verified:
+        lowersrc = src.lower()
+        for p in ["blacklist", "whitelist", "pause", "mint(", "setfee", "owner()", "transferownership"]:
+            if p in lowersrc:
+                flags.append(p)
+
+    return {
+        "ok": True,
+        "verified": verified,
+        "flags": flags,
+        "compiler": res0.get("CompilerVersion"),
+        "license": res0.get("LicenseType"),
+        "address": address,
+        "chain_code": key,
+        "note": None if verified else "Contract source is not verified on explorer"
+    }
 
 
 async def create_nowpayments_invoice(email: str) -> dict:
@@ -161,177 +230,135 @@ async def create_nowpayments_invoice(email: str) -> dict:
         return {"ok": False, "error": data}
 
 
-# -------- УМНЫЙ GROUP CHECK (Telegram/Discord + эвристики) --------
+# ---------- Паттерны/хелперы для Telegram/Discord ----------
+TG_USER_RE = re.compile(r"(?:https?://)?(?:t\.me|telegram\.me)/([A-Za-z0-9_]{3,})$")
+TG_JOIN_RE = re.compile(r"(?:https?://)?(?:t\.me|telegram\.me)/(?:\+|joinchat/)([A-Za-z0-9_\-]{6,})")
+DC_INV_RE  = re.compile(r"(?:https?://)?(?:discord\.gg|discord\.com/invite)/([A-Za-z0-9\-]+)")
+UA = {"User-Agent": "ScamCheck/mannequin-1"}
+
+def _label_pack(r: int):
+    if r >= 70: return ("Risk", "red", "High probability of invalid or unsafe link.")
+    if r >= 40: return ("Caution", "yellow", "Neutral risk level.")
+    return ("Safe", "green", "No obvious red flags found.")
+
+
+# -------- GROUP CHECK (манекен: Telegram по твоим правилам, Discord как было) --------
 async def group_quick_check(url: str) -> dict:
     """
-    Smart group checker:
-    - Discord: публичный invite API (with_counts/with_expiration) -> members/online, expired/invalid
-    - Telegram: парсинг публичной страницы t.me для признаков валидности
-    - Общие эвристики: шортнеры, ключевые слова (airdrop/bonus/claim...), http, странные коды
+    Telegram/Discord link checker — MANNEQUIN rules (по твоим требованиям).
+
+    Telegram:
+      • t.me/<username> СУЩЕСТВУЕТ  → risk = 45 (%), label=Caution, summary="Personal account"
+      • t.me/<username> НЕ СУЩЕСТВУЕТ → risk = 85 (%), label=Risk, summary="User not found"
+      • t.me/+... / joinchat/... ИЛИ распознана группа/канал → risk = 50 (%), label=Caution, summary="Group/Channel"
+    Discord:
+      • Оставлено как в твоём коде (через официальный API invites).
     """
     u = (url or "").strip()
     if not u:
         return {"ok": False, "error": "Empty link."}
 
-    # стартовые эвристики
-    risk = 10
-    signals = []
-    tips = []
+    signals, tips = [], []
 
-    shorteners = [
-        "bit.ly",
-        "tinyurl.com",
-        "cutt.ly",
-        "goo.gl",
-        "t.co",
-        "rb.gy",
-        "is.gd",
-        "s.id",
-        "linktr.ee",
-    ]
-    if any(s in u.lower() for s in shorteners):
-        risk = max(risk, 60)
-        signals.append("Link uses a URL shortener (hides destination)")
-
-    bad_kw = ["airdrop", "claim", "bonus", "double", "giveaway", "support", "unlock", "free", "fast profit"]
-    if any(k in u.lower() for k in bad_kw):
-        risk = max(risk, 55)
-        signals.append("Suspicious keywords in link")
-
-    if u.startswith("http://"):
-        risk = max(risk, 40)
-        signals.append("Insecure http link")
-
-    # распознаём платформу
-    tg_user = None
-    tg_join = None
-    dc_code = None
-
-    m_tg_user = re.search(r"(?:https?://)?(?:t\.me|telegram\.me)/([A-Za-z0-9_]{3,})$", u)
-    m_tg_join = re.search(r"(?:https?://)?(?:t\.me|telegram\.me)/\+([A-Za-z0-9_\-]{6,})", u)
-    m_dc = re.search(r"(?:https?://)?(?:discord\.gg|discord\.com/invite)/([A-Za-z0-9\-]+)", u)
-
-    if m_tg_join:
-        platform = "Telegram"
-        tg_join = m_tg_join.group(1)
-    elif m_tg_user:
-        platform = "Telegram"
-        tg_user = m_tg_user.group(1)
-    elif m_dc:
-        platform = "Discord"
+    # ---- Discord (инвайты) ----
+    m_dc = DC_INV_RE.search(u)
+    if m_dc:
         dc_code = m_dc.group(1)
-    else:
-        return {"ok": False, "error": "Provide a valid Telegram/Discord invite link."}
-
-    signals.append(f"Detected platform: {platform}")
-
-    try:
-        async with httpx.AsyncClient(timeout=12, headers={"User-Agent": "ScamCheck/1.0"}) as client:
-            if dc_code:
-                # Discord official invite endpoint
-                api = f"https://discord.com/api/v9/invites/{dc_code}?with_counts=true&with_expiration=true"
-                r = await client.get(api)
-                if r.status_code == 404:
-                    risk = max(risk, 80)
-                    return {
-                        "ok": True,
-                        "platform": "Discord",
-                        "url": u,
-                        "risk": risk,
-                        "label": "Risk",
-                        "color": "red",
-                        "summary": "Discord invite is invalid or expired.",
-                        "signals": signals + ["Discord API: invite not found (404)"],
-                        "tips": ["Ask admins for a fresh invite", "Check official site/socials for links"],
-                    }
-                if r.status_code != 200:
-                    risk = max(risk, 50)
-                    signals.append(f"Discord API returned {r.status_code}")
-                else:
-                    data = r.json()
-                    approx = data.get("approximate_member_count") or 0
-                    online = data.get("approximate_presence_count") or 0
-                    expires = data.get("expires_at")
-                    verif = data.get("guild", {}).get("verification_level")
-
-                    if approx < 10:
-                        risk = max(risk, 70)
-                        signals.append("Very small server (members < 10)")
-                    elif approx < 100:
-                        risk = max(risk, 45)
-                        signals.append("Small server (members < 100)")
-
-                    if expires is not None:
-                        signals.append("Invite has expiration set")
-                    if verif is not None and verif == 0:
-                        risk = max(risk, 40)
-                        signals.append("Low verification level in guild")
-
-                    tips += ["Check pinned rules and roles", "Do not DM unknown users"]
-
-                    label, color, summary = (
-                        ("Risk", "red", "High probability of spam/bots.") if risk >= 60
-                        else ("Caution", "yellow", "Some risk indicators were detected.") if risk >= 40
-                        else ("Safe", "green", "No obvious red flags found.")
-                    )
-
-                    return {
-                        "ok": True,
-                        "platform": "Discord",
-                        "url": u,
-                        "risk": risk,
-                        "label": label,
-                        "color": color,
-                        "summary": summary,
-                        "signals": signals + [f"Members ~ {approx}, Online ~ {online}"],
-                        "tips": tips,
-                    }
-
-            # Telegram: пробуем загрузить страницу t.me
-            page = f"https://t.me/{tg_user}" if tg_user else f"https://t.me/+{tg_join}"
-            r = await client.get(page, follow_redirects=True)
-            text = r.text.lower() if r.text else ""
-
-            if "invite link is invalid" in text or "link is invalid" in text or r.status_code in (404, 410):
-                risk = max(risk, 80)
-                summary = "Telegram invite appears invalid or expired."
-                label, color = "Risk", "red"
-                signals.append(f"HTTP {r.status_code} on t.me")
-            else:
-                if "join channel" in text or "join group" in text or "view in telegram" in text:
-                    signals.append("Page is reachable on t.me")
-                summary = "No obvious red flags found."
-                label, color = (
-                    ("Risk", "red") if risk >= 60 else
-                    ("Caution", "yellow") if risk >= 40 else
-                    ("Safe", "green")
-                )
-
-            tips += ["Open in Telegram app and verify admins", "Beware of fake support accounts"]
-
+        signals.append("Detected platform: Discord")
+        async with httpx.AsyncClient(timeout=12, headers=UA, follow_redirects=True) as client:
+            api = f"https://discord.com/api/v9/invites/{dc_code}?with_counts=true&with_expiration=true"
+            r = await client.get(api)
+            if r.status_code == 404:
+                return {
+                    "ok": True, "platform": "Discord", "url": u, "risk": 85,
+                    "label": "Risk", "color": "red", "summary": "Discord invite is invalid or expired.",
+                    "signals": signals + ["Discord API: invite not found (404)"],
+                    "tips": ["Ask admins for a fresh invite", "Check official site/socials for links"],
+                }
+            if r.status_code != 200:
+                return {
+                    "ok": True, "platform": "Discord", "url": u, "risk": 55,
+                    "label": "Caution", "color": "yellow", "summary": f"Discord API returned {r.status_code}",
+                    "signals": signals, "tips": ["Try again later"],
+                }
+            data = r.json()
+            approx = int(data.get("approximate_member_count") or 0)
+            online = int(data.get("approximate_presence_count") or 0)
+            risk = 50 if approx >= 100 else (75 if approx < 10 else 55)
+            L, C, S = _label_pack(risk)
             return {
-                "ok": True,
-                "platform": "Telegram",
-                "url": u,
-                "risk": risk,
-                "label": label,
-                "color": color,
-                "summary": summary,
-                "signals": signals,
-                "tips": tips,
+                "ok": True, "platform": "Discord", "url": u, "risk": risk,
+                "label": L, "color": C, "summary": S,
+                "signals": signals + [f"Members ~ {approx}, Online ~ {online}"],
+                "tips": ["Check pinned rules and roles", "Do not DM unknown users"],
             }
 
-    except Exception as e:
-        # сеть упала — вернём эвристическую оценку
-        risk = max(risk, 40)
+    # ---- Telegram ----
+    m_tg_join = TG_JOIN_RE.search(u)
+    m_tg_user = TG_USER_RE.search(u)
+
+    if not (m_tg_join or m_tg_user):
+        return {"ok": False, "error": "Provide a valid Telegram link (t.me/<username> or t.me/+invite)."}
+
+    signals.append("Detected platform: Telegram")
+
+    # 1) Инвайт — трактуем как группа/канал → 50
+    if m_tg_join:
+        risk = 50
+        L, C, S = _label_pack(risk)
         return {
-            "ok": True,
-            "platform": "Discord" if dc_code else "Telegram",
-            "url": u,
-            "risk": risk,
-            "label": "Caution",
-            "color": "yellow",
-            "summary": "Network error while checking link; using heuristics only.",
-            "signals": signals + [f"Exception: {type(e).__name__}"],
-            "tips": ["Try again later", "Verify link in the official website/socials"],
+            "ok": True, "platform": "Telegram", "type": "invite",
+            "url": u, "risk": risk, "label": L, "color": C, "summary": "Group/Channel (invite)",
+            "signals": signals + ["Invite link pattern (+/joinchat)"],
+            "tips": ["Open in Telegram app and verify admins"],
         }
+
+    # 2) Username — проверяем существование страницы t.me/<username>
+    username = m_tg_user.group(1)
+    try:
+        async with httpx.AsyncClient(timeout=10, headers=UA, follow_redirects=True) as client:
+            r = await client.get(f"https://t.me/{username}")
+            text = (r.text or "").lower()
+    except Exception:
+        # сетевую ошибку трактуем как личный акк (по твоему правилу)
+        risk = 45
+        L, C, S = _label_pack(risk)
+        return {
+            "ok": True, "platform": "Telegram", "type": "user",
+            "url": u, "risk": risk, "label": L, "color": C, "summary": "Personal account",
+            "signals": signals + ["Network error — mannequin fallback"],
+            "tips": ["Open in Telegram app to verify profile"],
+        }
+
+    # нет такого пользователя/страницы
+    nf = (r.status_code in (404, 410)) or ("was not found" in text) or ("page not found" in text) or ("not found" in text)
+    if nf:
+        risk = 85
+        L, C, S = _label_pack(risk)
+        return {
+            "ok": True, "platform": "Telegram", "type": "user_or_chat_missing",
+            "url": u, "risk": risk, "label": L, "color": C, "summary": "User not found",
+            "signals": signals + [f"Username @{username} not found on t.me"],
+            "tips": ["Check spelling or share a correct link"],
+        }
+
+    # есть страница: если видим маркеры канала/группы — 50, иначе считаем личный профиль — 45
+    is_chat = any(s in text for s in ("tgme_channel_history", "tgme_channel_info", "join channel", "join group"))
+    if is_chat:
+        risk = 50
+        L, C, S = _label_pack(risk)
+        return {
+            "ok": True, "platform": "Telegram", "type": "chat",
+            "url": u, "risk": risk, "label": L, "color": C, "summary": "Group/Channel",
+            "signals": signals + ["Channel/group markers on page"],
+            "tips": ["Open in Telegram app and verify admins"],
+        }
+
+    risk = 45
+    L, C, S = _label_pack(risk)
+    return {
+        "ok": True, "platform": "Telegram", "type": "user",
+        "url": u, "risk": risk, "label": L, "color": C, "summary": "Personal account",
+        "signals": signals + ["Username page reachable — treated as personal account"],
+        "tips": ["Open in Telegram app to verify profile"],
+    }

@@ -1,37 +1,101 @@
 {% extends "base.html" %}
-
-{% block title %}Subscription — ScamCheck{% endblock %}
-{% block h1 %}Subscription{% endblock %}
+{% block title %}Subscription{% endblock %}
 
 {% block content %}
-{% if sub %}
-  <p class="ok">✅ Premium is active for {{ user }}. All features unlocked.</p>
-{% else %}
-  <div class="pricing">
-    <div class="card raise">
-      <h3>Premium</h3>
-      <div class="price"><span>$</span>20<span>/month</span></div>
-      <ul>
-        <li>All wallet/token/contract checks</li>
-        <li>Priority API speed</li>
-        <li>Upcoming Telegram/Discord audit</li>
-      </ul>
+<style>
+/* Premium Pricing Styles (single card) */
+.pricing-wrap{max-width:820px;margin:0 auto}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;padding:24px 26px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card.glow{box-shadow:0 0 0 1px rgba(120,255,180,.25), 0 20px 60px rgba(0,0,0,.35)}
+.hint{display:inline-block;font-size:12px;padding:4px 8px;border-radius:999px;
+      background:rgba(120,255,180,.15);border:1px solid rgba(120,255,180,.35);color:#9fffc4}
+.price{display:flex;align-items:baseline;gap:10px;margin:10px 0 6px}
+.price .now{font-size:44px;font-weight:800;color:#9fffc4}
+.price .per{opacity:.8}
+.price .old{font-size:16px;opacity:.45;text-decoration:line-through}
+.list{margin:14px 0 8px;padding-left:0;list-style:none;display:grid;gap:10px}
+.i{display:inline-flex;align-items:center;gap:9px}
+.i .dot{width:9px;height:9px;border-radius:50%;
+        background:#39d98a; /* зелёная точка */
+        box-shadow:0 0 16px rgba(57,217,138,.45)}
+/* все пункты, в том числе muted, зелёные */
+.i.muted .dot{background:#39d98a; box-shadow:0 0 16px rgba(57,217,138,.45)}
+.subtle{opacity:.8}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn{appearance:none;border:none;border-radius:12px;padding:12px 18px;font-weight:700;
+     cursor:pointer;transition:.2s;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.btn.primary{background:linear-gradient(90deg,#4f7cff,#8a6bff);color:#fff}
+.btn.primary:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff}
+.kicker{font-size:13px;opacity:.7;margin-top:10px}
+.status{margin-bottom:18px;padding:10px 12px;border:1px dashed rgba(120,255,180,.35);
+        border-radius:12px;background:rgba(120,255,180,.08)}
+.err{margin:0 0 14px 0;color:#ff9e9e;background:rgba(255, 85, 85, .08);
+     border:1px solid rgba(255,85,85,.35);padding:10px 12px;border-radius:10px}
+.badge-row{display:flex;gap:10px;align-items:center;margin-top:6px}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);
+       border:1px solid rgba(255,255,255,.12)}
+</style>
 
-      {% if pay_error %}
-        <div class="err" style="margin:8px 0">Payment error: {{ pay_error }}</div>
-      {% endif %}
+<div class="pricing-wrap">
 
-      <form method="post" action="/subscription/pay">
-        <button class="btn glow big" type="submit">Pay $20/month</button>
-      </form>
-
-      {# Dev-кнопка видна только админу #}
-      {% if is_admin %}
-      <form method="post" action="/subscription/demo-activate" style="margin-top:10px">
-        <button class="btn subtle" type="submit">Activate Demo (dev)</button>
-      </form>
+  {% if user %}
+    <div class="status">
+      <strong>{{ user }}</strong>
+      {% if sub %}
+        — Premium is active. {% if badge and badge.days_left %}Days left: <b>{{ badge.days_left }}</b>.{% endif %}
+      {% else %}
+        — Free plan. Daily free wallet checks available: <b>{{ badge.max_free if badge else 5 }}</b>.
       {% endif %}
     </div>
+  {% endif %}
+
+  {% if pay_error %}
+    <div class="err">{{ pay_error }}</div>
+  {% endif %}
+
+  <!-- Одна карточка (левая большая), правая удалена -->
+  <div class="card glow">
+    <div class="badge-row">
+      <span class="badge">Premium</span>
+      <span class="hint">Best value</span>
+    </div>
+
+    <div class="price">
+      <span class="old">$39.99</span>
+      <span class="now">$20</span>
+      <span class="per">/month</span>
+      <span class="hint">Limited time</span>
+    </div>
+
+    <ul class="list">
+      <li class="i"><span class="dot"></span> <b>All checks:</b>&nbsp;Wallet, Token, Contract, Group</li>
+      <li class="i"><span class="dot"></span> <b>Unlimited</b> checks</li>
+      <li class="i muted"><span class="dot"></span> Priority API speed</li>
+      <li class="i muted"><span class="dot"></span> Full risk reports with clear red-flags</li>
+      <li class="i muted"><span class="dot"></span> Early access to new chains</li>
+    </ul>
+
+    <div class="cta">
+      {% if sub %}
+        <form action="/subscription/demo-activate" method="post">
+          <button class="btn ghost" type="submit">Extend 30 days</button>
+        </form>
+      {% else %}
+        <form action="/subscription/pay" method="post">
+          <button class="btn primary" type="submit">Pay $20/month</button>
+        </form>
+        {% if is_admin %}
+        <form action="/subscription/demo-activate" method="post">
+          <button class="btn ghost" type="submit">Activate 30 days (admin)</button>
+        </form>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="kicker subtle">Subscription term: 30 days. Cancel anytime.</div>
   </div>
-{% endif %}
+
+</div>
 {% endblock %}
