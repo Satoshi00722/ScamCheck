@@ -17,9 +17,9 @@
 .list{margin:14px 0 8px;padding-left:0;list-style:none;display:grid;gap:10px}
 .i{display:inline-flex;align-items:center;gap:9px}
 .i .dot{width:9px;height:9px;border-radius:50%;
-        background:#39d98a; /* зелёная точка */
+        background:#39d98a; /* green dot */
         box-shadow:0 0 16px rgba(57,217,138,.45)}
-/* все пункты, в том числе muted, зелёные */
+/* even muted items use green dots */
 .i.muted .dot{background:#39d98a; box-shadow:0 0 16px rgba(57,217,138,.45)}
 .subtle{opacity:.8}
 .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
@@ -55,7 +55,7 @@
     <div class="err">{{ pay_error }}</div>
   {% endif %}
 
-  <!-- Одна карточка (левая большая), правая удалена -->
+  <!-- Single Premium card -->
   <div class="card glow">
     <div class="badge-row">
       <span class="badge">Premium</span>
@@ -79,9 +79,11 @@
 
     <div class="cta">
       {% if sub %}
+        {% if is_admin %}
         <form action="/subscription/demo-activate" method="post">
-          <button class="btn ghost" type="submit">Extend 30 days</button>
+          <button class="btn ghost" type="submit">Extend 30 days (admin)</button>
         </form>
+        {% endif %}
       {% else %}
         <form action="/subscription/pay" method="post">
           <button class="btn primary" type="submit">Pay $20/month</button>
